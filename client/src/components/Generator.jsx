@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Sparkles, Copy, Download, Check, AlertCircle } from "lucide-react";
+import Toast from "./Toast.jsx";
 
 const PURPOSES = [
   "Education", "Coding", "Research", "Business", "Marketing",
@@ -8,6 +9,14 @@ const PURPOSES = [
 ];
 
 const TONES = ["Professional", "Casual", "Academic", "Technical", "Creative", "Persuasive"];
+
+const LOADING_STEPS = [
+  "Analyzing your topic...",
+  "Engineering the perfect prompt...",
+  "Optimizing for clarity...",
+  "Adding precision targeting...",
+  "Almost ready...",
+];
 
 const complexityLabel = (val) => {
   if (val <= 3) return "Basic";
@@ -34,9 +43,11 @@ export default function Generator({ initialData }) {
   });
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState(false);
   const sliderRef = useRef(null);
+  const stepTimerRef = useRef(null);
 
   useEffect(() => {
     if (sliderRef.current) {
@@ -44,6 +55,23 @@ export default function Generator({ initialData }) {
       sliderRef.current.style.setProperty("--progress", `${pct}%`);
     }
   }, [form.complexity]);
+
+  useEffect(() => {
+    if (loading) {
+      setLoadingStep(0);
+      stepTimerRef.current = setInterval(() => {
+        setLoadingStep((s) => (s < LOADING_STEPS.length - 1 ? s + 1 : s));
+      }, 900);
+    } else {
+      clearInterval(stepTimerRef.current);
+    }
+    return () => clearInterval(stepTimerRef.current);
+  }, [loading]);
+
+  const showToast = () => {
+    setToast(true);
+    setTimeout(() => setToast(false), 2500);
+  };
 
   const handleGenerate = async () => {
     if (!form.topic.trim()) {
@@ -73,8 +101,7 @@ export default function Generator({ initialData }) {
   const handleCopy = () => {
     if (!output) return;
     navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    showToast();
   };
 
   const handleDownload = () => {
@@ -90,6 +117,8 @@ export default function Generator({ initialData }) {
 
   return (
     <section id="generator" className="py-24 px-4 max-w-7xl mx-auto">
+      <Toast message="Copied to clipboard!" visible={toast} />
+
       <div className="text-center mb-14">
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">AI Prompt Generator</h2>
         <p className="text-gray-400 text-lg">Craft powerful prompts tailored to your needs</p>
@@ -97,10 +126,8 @@ export default function Generator({ initialData }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left — Inputs */}
-        <div className="rounded-2xl p-6 md:p-8 glow-border"
-          style={{ background: "#120f2a" }}>
+        <div className="rounded-2xl p-6 md:p-8 glow-border" style={{ background: "#120f2a" }}>
 
-          {/* Topic */}
           <div className="mb-6">
             <label className="block text-white font-medium mb-2">Topic</label>
             <input
@@ -108,12 +135,12 @@ export default function Generator({ initialData }) {
               placeholder="Enter your topic..."
               value={form.topic}
               onChange={(e) => setForm({ ...form, topic: e.target.value })}
+              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
               className="w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-purple-500 transition-all"
               style={{ background: "#1a1535", border: "1px solid #2a2250" }}
             />
           </div>
 
-          {/* Description */}
           <div className="mb-6">
             <label className="block text-white font-medium mb-2">Short Description</label>
             <textarea
@@ -126,7 +153,6 @@ export default function Generator({ initialData }) {
             />
           </div>
 
-          {/* Complexity */}
           <div className="mb-6">
             <label className="block text-white font-medium mb-3">
               Complexity:{" "}
@@ -148,7 +174,6 @@ export default function Generator({ initialData }) {
             </div>
           </div>
 
-          {/* Purpose */}
           <div className="mb-6">
             <label className="block text-white font-medium mb-2">Purpose</label>
             <select
@@ -156,20 +181,15 @@ export default function Generator({ initialData }) {
               onChange={(e) => setForm({ ...form, purpose: e.target.value })}
               className="w-full px-4 py-3 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all appearance-none cursor-pointer"
               style={{ background: "#1a1535", border: "1px solid #2a2250" }}>
-              {PURPOSES.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
+              {PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
 
-          {/* Tone */}
           <div className="mb-6">
             <label className="block text-white font-medium mb-3">Tone</label>
             <div className="flex flex-wrap gap-2">
               {TONES.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setForm({ ...form, tone: t })}
+                <button key={t} onClick={() => setForm({ ...form, tone: t })}
                   className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
                   style={form.tone === t
                     ? { background: "linear-gradient(135deg, #7c3aed, #4f46e5)", color: "#fff", border: "1px solid #7c3aed" }
@@ -180,7 +200,6 @@ export default function Generator({ initialData }) {
             </div>
           </div>
 
-          {/* Additional Instructions */}
           <div className="mb-8">
             <label className="block text-white font-medium mb-2">Additional Instructions</label>
             <textarea
@@ -193,7 +212,6 @@ export default function Generator({ initialData }) {
             />
           </div>
 
-          {/* Error */}
           {error && (
             <div className="flex items-center gap-2 text-red-400 text-sm mb-4 p-3 rounded-lg"
               style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}>
@@ -202,7 +220,6 @@ export default function Generator({ initialData }) {
             </div>
           )}
 
-          {/* Generate button */}
           <button
             onClick={handleGenerate}
             disabled={loading}
@@ -229,16 +246,12 @@ export default function Generator({ initialData }) {
             <h3 className="text-white font-semibold text-lg">Generated Prompt</h3>
             {output && (
               <div className="flex gap-2">
-                <button
-                  onClick={handleCopy}
-                  title="Copy"
+                <button onClick={handleCopy} title="Copy"
                   className="p-2 rounded-lg transition-all hover:bg-white/10"
                   style={{ border: "1px solid #2a2250" }}>
-                  {copied ? <Check size={16} className="text-green-400" /> : <Copy size={16} className="text-gray-400" />}
+                  <Copy size={16} className="text-gray-400" />
                 </button>
-                <button
-                  onClick={handleDownload}
-                  title="Download"
+                <button onClick={handleDownload} title="Download"
                   className="p-2 rounded-lg transition-all hover:bg-white/10"
                   style={{ border: "1px solid #2a2250" }}>
                   <Download size={16} className="text-gray-400" />
@@ -249,21 +262,50 @@ export default function Generator({ initialData }) {
 
           <div className="flex-1 rounded-xl p-5 relative overflow-auto"
             style={{ background: "#0d0b1e", border: "1px solid #1e1a40" }}>
+
+            {/* Empty state */}
             {!output && !loading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
                 <Sparkles size={40} className="text-gray-700 mb-4 animate-float" />
                 <p className="text-gray-600 text-sm">Your generated prompt will appear here</p>
               </div>
             )}
+
+            {/* Loading animation */}
             {loading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                <div className="relative w-12 h-12">
-                  <div className="w-12 h-12 border-2 border-purple-500/20 rounded-full" />
-                  <div className="absolute inset-0 w-12 h-12 border-2 border-transparent border-t-purple-500 rounded-full animate-spin" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-6">
+                {/* Orbiting rings */}
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full border-2 border-purple-500/10" />
+                  <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-500 animate-spin" />
+                  <div className="absolute inset-2 rounded-full border-2 border-transparent border-t-indigo-400"
+                    style={{ animation: "spin 1.5s linear infinite reverse" }} />
+                  <Sparkles size={18} className="text-purple-400" />
                 </div>
-                <p className="text-gray-500 text-sm">Crafting your perfect prompt...</p>
+
+                {/* Step text */}
+                <div className="text-center">
+                  <p className="text-purple-300 text-sm font-medium mb-3 transition-all duration-500">
+                    {LOADING_STEPS[loadingStep]}
+                  </p>
+                  {/* Step dots */}
+                  <div className="flex gap-2 justify-center">
+                    {LOADING_STEPS.map((_, i) => (
+                      <div key={i} className="rounded-full transition-all duration-500"
+                        style={{
+                          width: i === loadingStep ? "20px" : "6px",
+                          height: "6px",
+                          background: i <= loadingStep
+                            ? "linear-gradient(135deg, #7c3aed, #4f46e5)"
+                            : "#2a2250",
+                        }} />
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
+
+            {/* Output */}
             {output && (
               <p className="text-gray-200 leading-relaxed text-sm whitespace-pre-wrap animate-fade-in">
                 {output}
@@ -272,11 +314,10 @@ export default function Generator({ initialData }) {
           </div>
 
           {output && (
-            <button
-              onClick={handleCopy}
+            <button onClick={handleCopy}
               className="mt-4 w-full py-3 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90"
-              style={{ background: copied ? "rgba(16,185,129,0.2)" : "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}>
-              {copied ? <><Check size={16} className="text-green-400" /> Copied!</> : <><Copy size={16} /> Copy to Clipboard</>}
+              style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}>
+              <Copy size={16} /> Copy to Clipboard
             </button>
           )}
         </div>
