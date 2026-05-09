@@ -6,6 +6,7 @@ server/node_modules/
 # Environment variables - NEVER commit these
 .env
 server/.env
+server/.env.example
 client/.env
 
 # Build output
@@ -26,3 +27,4 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
