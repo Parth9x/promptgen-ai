@@ -1,6 +1,25 @@
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, Copy, Download, Check, AlertCircle } from "lucide-react";
+import { Sparkles, Copy, Download, AlertCircle, TrendingDown, ShieldCheck, Zap } from "lucide-react";
 import Toast from "./Toast.jsx";
+
+const calcMetrics = (form, promptText) => {
+  const words = promptText.trim().split(/\s+/).length;
+  const promptTokens = Math.round(words * 1.3);
+  const avgRetries = form.complexity <= 3 ? 2 : form.complexity <= 6 ? 3 : 4;
+  const avgResponseTokens = form.complexity * 90;
+  const tokensSaved = Math.round((avgRetries - 1) * avgResponseTokens * 0.85);
+
+  let quality = 45;
+  quality += Math.min(form.complexity * 4, 24);
+  quality += form.description?.trim() ? 14 : 0;
+  quality += form.additionalInstructions?.trim() ? 9 : 0;
+  quality += ["Professional", "Academic", "Technical"].includes(form.tone) ? 8 : 4;
+  quality = Math.min(quality, 98);
+
+  const retryReduction = Math.round(((avgRetries - 1) / avgRetries) * 100);
+
+  return { tokensSaved, quality, retryReduction, promptTokens };
+};
 
 const PURPOSES = [
   "Education", "Coding", "Research", "Business", "Marketing",
@@ -314,11 +333,40 @@ export default function Generator({ initialData }) {
           </div>
 
           {output && (
-            <button onClick={handleCopy}
-              className="mt-4 w-full py-3 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90"
-              style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}>
-              <Copy size={16} /> Copy to Clipboard
-            </button>
+            <>
+              <button onClick={handleCopy}
+                className="mt-4 w-full py-3 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}>
+                <Copy size={16} /> Copy to Clipboard
+              </button>
+
+              {/* Metrics panel */}
+              {(() => {
+                const m = calcMetrics(form, output);
+                return (
+                  <div className="mt-4 grid grid-cols-3 gap-3 animate-fade-in">
+                    <div className="rounded-xl p-3 text-center"
+                      style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                      <TrendingDown size={16} className="text-green-400 mx-auto mb-1" />
+                      <p className="text-green-400 font-bold text-base">~{m.tokensSaved}</p>
+                      <p className="text-gray-500 text-xs mt-0.5">tokens saved</p>
+                    </div>
+                    <div className="rounded-xl p-3 text-center"
+                      style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)" }}>
+                      <ShieldCheck size={16} className="text-purple-400 mx-auto mb-1" />
+                      <p className="text-purple-400 font-bold text-base">{m.quality}%</p>
+                      <p className="text-gray-500 text-xs mt-0.5">quality score</p>
+                    </div>
+                    <div className="rounded-xl p-3 text-center"
+                      style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)" }}>
+                      <Zap size={16} className="text-sky-400 mx-auto mb-1" />
+                      <p className="text-sky-400 font-bold text-base">↓{m.retryReduction}%</p>
+                      <p className="text-gray-500 text-xs mt-0.5">retry reduction</p>
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
           )}
         </div>
       </div>

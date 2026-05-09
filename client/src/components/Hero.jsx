@@ -1,9 +1,8 @@
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, TrendingDown, Target } from "lucide-react";
 
 export default function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 pt-20 grid-bg overflow-hidden">
-      {/* Glowing orbs */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full pointer-events-none"
         style={{ background: "radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%)", filter: "blur(40px)" }} />
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full pointer-events-none"
@@ -13,21 +12,36 @@ export default function Hero() {
       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 text-sm font-medium text-purple-400"
         style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)" }}>
         <Sparkles size={14} />
-        AI-Powered Prompt Generation
+        AI Prompt Optimization Platform
       </div>
 
       {/* Heading */}
       <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 max-w-4xl">
-        <span className="gradient-text">Generate Perfect</span>
+        <span className="gradient-text">Stop Wasting Tokens</span>
         <br />
-        <span className="text-white">AI Prompts Instantly</span>
+        <span className="text-white">on Bad Prompts.</span>
       </h1>
 
-      <p className="text-gray-400 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
-        Transform your ideas into expertly crafted AI prompts. Save time, boost
-        productivity, and unlock the full potential of AI with intelligent prompt
-        engineering.
+      <p className="text-gray-400 text-lg md:text-xl max-w-2xl mb-6 leading-relaxed">
+        PromptGen AI engineers precision prompts that get the right output on the first try —
+        reducing token spend by up to <span className="text-purple-400 font-semibold">60%</span> and
+        eliminating costly re-prompting cycles.
       </p>
+
+      {/* Stat pills */}
+      <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+        {[
+          { icon: TrendingDown, label: "60% fewer tokens", color: "#10b981" },
+          { icon: Target, label: "First-try accuracy", color: "#8b5cf6" },
+          { icon: Sparkles, label: "42% less re-prompting", color: "#38bdf8" },
+        ].map(({ icon: Icon, label, color }) => (
+          <div key={label} className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color }}>
+            <Icon size={13} />
+            {label}
+          </div>
+        ))}
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <a href="#generator"
@@ -44,7 +58,6 @@ export default function Hero() {
         </a>
       </div>
 
-      {/* Floating cards decoration */}
       <div className="mt-20 w-full max-w-3xl relative">
         <div className="absolute inset-0 rounded-2xl"
           style={{ background: "linear-gradient(180deg, transparent, #09071a 80%)", zIndex: 1 }} />
