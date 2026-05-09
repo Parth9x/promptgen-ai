@@ -13,7 +13,13 @@ export default function Footer() {
 
       <p className="text-gray-500 text-sm flex items-center justify-center gap-1">
         Created with <Heart size={13} className="text-pink-500 fill-pink-500" /> by{" "}
-        <span className="text-purple-400 font-medium">Parth Kulshrestha</span>
+        <a
+          href="https://www.linkedin.com/in/parth-kulshrestha-592b402b0"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-purple-400 font-medium hover:text-purple-300 transition-colors underline underline-offset-2">
+          Parth Kulshrestha
+        </a>
       </p>
 
       <p className="text-gray-600 text-xs mt-2">
